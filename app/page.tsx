@@ -1,6 +1,15 @@
 "use client";
 
-import React, {  home: string;import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "../lib/supabase/client";
+import { getDisplayName } from "../lib/player";
+
+type Match = {
+  id: number;
+  date: string;
+  stage: string;
+  group: string | null;
+  home: string;
   away: string;
   venue: string;
   homeScore: number | null;
