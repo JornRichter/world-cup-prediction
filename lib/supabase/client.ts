@@ -1,11 +1,9 @@
-import { createBrowserClient } from "@supabase/ssr";
-
-export function ✅ Export a usable instanceexport function createClient() {
-export const supabase = createClient();
-
-  return createBrowserClient(
+import { createBrowserClient } from "@supabase/ssr";import { createBrowserClient } from "@supabase/ssBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   );
 }
 
+export const supabase = createClient();
+
+export function createClient() {
