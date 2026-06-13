@@ -1,10 +1,11 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-export function createClient() {
-  return createABLE_KEY!  return createBrowserClient(
+export function ✅ Export a usable instanceexport function createClient() {
+export const supabase = createClient();
+
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   );
 }
 
-// ✅ THIS LINE IS THE IMPORTANT FIX
-export const supabase = createClient();
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
