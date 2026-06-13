@@ -1,15 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
-import { getDisplayName } from "@/lib/player";
-
-type Match = {
-  id: number;
-  date: string;
-  stage: string;
-  group: string | null;
-  home: string;
+import React, {  home: string;import React, { useEffect, useMemo, useRef, useState } from "react";
   away: string;
   venue: string;
   homeScore: number | null;
@@ -44,7 +35,11 @@ type ResultRow = {
   away_score: number | null;
 };
 
-const DEFAULT_SCORING: Scoring = { exactPoints: 5, outcomePoints: 2, drawBonus: 1 };
+const DEFAULT_SCORING: Scoring = {
+  exactPoints: 5,
+  outcomePoints: 2,
+  drawBonus: 1,
+};
 
 const TEAM_FLAGS: Record<string, string> = {
   Mexico: "🇲🇽",
@@ -97,14 +92,117 @@ const TEAM_FLAGS: Record<string, string> = {
   Colombia: "🇨🇴",
 };
 
-// ✅ PASTE YOUR EXISTING FULL FIXTURES_TEXT BLOCK HERE EXACTLY AS-IS
 const FIXTURES_TEXT = `
-PASTE YOUR CURRENT FULL FIXTURES_TEXT HERE
+1|2026-06-11|Group Stage|A|Mexico|South Africa|Mexico City Stadium|2|0
+2|2026-06-11|Group Stage|A|Korea Republic|Czechia|Guadalajara Stadium|2|1
+3|2026-06-12|Group Stage|B|Canada|Bosnia and Herzegovina|Toronto Stadium||
+4|2026-06-12|Group Stage|D|USA|Paraguay|Los Angeles Stadium||
+5|2026-06-13|Group Stage|C|Haiti|Scotland|Boston Stadium||
+6|2026-06-13|Group Stage|D|Australia|Türkiye|BC Place Vancouver||
+7|2026-06-13|Group Stage|C|Brazil|Morocco|New York New Jersey Stadium||
+8|2026-06-13|Group Stage|B|Qatar|Switzerland|San Francisco Bay Area Stadium||
+9|2026-06-14|Group Stage|E|Côte d'Ivoire|Ecuador|Philadelphia Stadium||
+10|2026-06-14|Group Stage|E|Germany|Curaçao|Houston Stadium||
+11|2026-06-14|Group Stage|F|Netherlands|Japan|Dallas Stadium||
+12|2026-06-14|Group Stage|F|Sweden|Tunisia|Estadio Monterrey||
+13|2026-06-15|Group Stage|H|Saudi Arabia|Uruguay|Miami Stadium||
+14|2026-06-15|Group Stage|H|Spain|Cabo Verde|Atlanta Stadium||
+15|2026-06-15|Group Stage|G|IR Iran|New Zealand|Los Angeles Stadium||
+16|2026-06-15|Group Stage|G|Belgium|Egypt|Seattle Stadium||
+17|2026-06-16|Group Stage|I|France|Senegal|New York New Jersey Stadium||
+18|2026-06-16|Group Stage|I|Iraq|Norway|Boston Stadium||
+19|2026-06-16|Group Stage|J|Argentina|Algeria|Kansas City Stadium||
+20|2026-06-16|Group Stage|J|Austria|Jordan|San Francisco Bay Area Stadium||
+21|2026-06-17|Group Stage|L|Ghana|Panama|Toronto Stadium||
+22|2026-06-17|Group Stage|L|England|Croatia|Dallas Stadium||
+23|2026-06-17|Group Stage|K|Portugal|Congo DR|Houston Stadium||
+24|2026-06-17|Group Stage|K|Uzbekistan|Colombia|Mexico City Stadium||
+25|2026-06-18|Group Stage|A|Czechia|South Africa|Atlanta Stadium||
+26|2026-06-18|Group Stage|B|Switzerland|Bosnia and Herzegovina|Los Angeles Stadium||
+27|2026-06-18|Group Stage|B|Canada|Qatar|BC Place Vancouver||
+28|2026-06-18|Group Stage|A|Mexico|Korea Republic|Guadalajara Stadium||
+29|2026-06-19|Group Stage|C|Brazil|Haiti|Philadelphia Stadium||
+30|2026-06-19|Group Stage|C|Scotland|Morocco|Boston Stadium||
+31|2026-06-19|Group Stage|D|Türkiye|Paraguay|San Francisco Bay Area Stadium||
+32|2026-06-19|Group Stage|D|USA|Australia|Seattle Stadium||
+33|2026-06-20|Group Stage|E|Germany|Côte d'Ivoire|Toronto Stadium||
+34|2026-06-20|Group Stage|E|Ecuador|Curaçao|Kansas City Stadium||
+35|2026-06-20|Group Stage|F|Netherlands|Sweden|Houston Stadium||
+36|2026-06-20|Group Stage|F|Tunisia|Japan|Estadio Monterrey||
+37|2026-06-21|Group Stage|H|Uruguay|Cabo Verde|Miami Stadium||
+38|2026-06-21|Group Stage|H|Spain|Saudi Arabia|Atlanta Stadium||
+39|2026-06-21|Group Stage|G|Belgium|IR Iran|Los Angeles Stadium||
+40|2026-06-21|Group Stage|G|New Zealand|Egypt|BC Place Vancouver||
+41|2026-06-22|Group Stage|I|Norway|Senegal|New York New Jersey Stadium||
+42|2026-06-22|Group Stage|I|France|Iraq|Philadelphia Stadium||
+43|2026-06-22|Group Stage|J|Argentina|Austria|Dallas Stadium||
+44|2026-06-22|Group Stage|J|Jordan|Algeria|San Francisco Bay Area Stadium||
+45|2026-06-23|Group Stage|L|England|Ghana|Boston Stadium||
+46|2026-06-23|Group Stage|L|Panama|Croatia|Toronto Stadium||
+47|2026-06-23|Group Stage|K|Portugal|Uzbekistan|Houston Stadium||
+48|2026-06-23|Group Stage|K|Colombia|Congo DR|Guadalajara Stadium||
+49|2026-06-24|Group Stage|C|Scotland|Brazil|Miami Stadium||
+50|2026-06-24|Group Stage|C|Morocco|Haiti|Atlanta Stadium||
+51|2026-06-24|Group Stage|B|Switzerland|Canada|BC Place Vancouver||
+52|2026-06-24|Group Stage|B|Bosnia and Herzegovina|Qatar|Seattle Stadium||
+53|2026-06-24|Group Stage|A|Czechia|Mexico|Mexico City Stadium||
+54|2026-06-24|Group Stage|A|South Africa|Korea Republic|Estadio Monterrey||
+55|2026-06-25|Group Stage|E|Curaçao|Côte d'Ivoire|Philadelphia Stadium||
+56|2026-06-25|Group Stage|E|Ecuador|Germany|New York New Jersey Stadium||
+57|2026-06-25|Group Stage|F|Japan|Sweden|Dallas Stadium||
+58|2026-06-25|Group Stage|F|Tunisia|Netherlands|Kansas City Stadium||
+59|2026-06-25|Group Stage|D|Türkiye|USA|Los Angeles Stadium||
+60|2026-06-25|Group Stage|D|Paraguay|Australia|San Francisco Bay Area Stadium||
+61|2026-06-26|Group Stage|I|Norway|France|Boston Stadium||
+62|2026-06-26|Group Stage|I|Senegal|Iraq|Toronto Stadium||
+63|2026-06-26|Group Stage|G|Egypt|IR Iran|Seattle Stadium||
+64|2026-06-26|Group Stage|G|New Zealand|Belgium|BC Place Vancouver||
+65|2026-06-26|Group Stage|H|Cabo Verde|Saudi Arabia|Houston Stadium||
+66|2026-06-26|Group Stage|H|Uruguay|Spain|Guadalajara Stadium||
+67|2026-06-27|Group Stage|L|Panama|England|New York New Jersey Stadium||
+68|2026-06-27|Group Stage|L|Croatia|Ghana|Philadelphia Stadium||
+69|2026-06-27|Group Stage|J|Algeria|Austria|Kansas City Stadium||
+70|2026-06-27|Group Stage|J|Jordan|Argentina|Dallas Stadium||
+71|2026-06-27|Group Stage|K|Colombia|Portugal|Miami Stadium||
+72|2026-06-27|Group Stage|K|Congo DR|Uzbekistan|Atlanta Stadium||
+73|2026-06-28|Round of 32||Group A runners-up|Group B runners-up|Los Angeles Stadium||
+74|2026-06-29|Round of 32||Group E winners|Group A/B/C/D/F third place|Boston Stadium||
+75|2026-06-29|Round of 32||Group F winners|Group C runners-up|Estadio Monterrey||
+76|2026-06-29|Round of 32||Group C winners|Group F runners-up|Houston Stadium||
+77|2026-06-30|Round of 32||Group I winners|Group C/D/F/G/H third place|New York New Jersey Stadium||
+78|2026-06-30|Round of 32||Group E runners up|Group I runners-up|Dallas Stadium||
+79|2026-06-30|Round of 32||Group A winners|Group C/E/F/H/I third place|Mexico City Stadium||
+80|2026-07-01|Round of 32||Group L winners|Group E/H/I/J/K third place|Atlanta Stadium||
+81|2026-07-01|Round of 32||Group D winners|Group B/E/F/I/J third place|San Francisco Bay Area Stadium||
+82|2026-07-01|Round of 32||Group G winners|Group A/E/H/I/J third place|Seattle Stadium||
+83|2026-07-02|Round of 32||Group K runners-up|Group L runners-up|Toronto Stadium||
+84|2026-07-02|Round of 32||Group H winners|Group J runners-up|Los Angeles Stadium||
+85|2026-07-02|Round of 32||Group B winners|Group E/F/G/I/J third place|BC Place Vancouver||
+86|2026-07-03|Round of 32||Group J winners|Group H runners-up|Miami Stadium||
+87|2026-07-03|Round of 32||Group K winners|Group D/E/I/J/L third place|Kansas City Stadium||
+88|2026-07-03|Round of 32||Group D runners-up|Group G runners-up|Dallas Stadium||
+89|2026-07-04|Round of 16||Winner match 74|Winner match 77|Philadelphia Stadium||
+90|2026-07-04|Round of 16||Winner match 73|Winner match 75|Houston Stadium||
+91|2026-07-05|Round of 16||Winner match 76|Winner match 78|New York New Jersey Stadium||
+92|2026-07-05|Round of 16||Winner match 79|Winner match 80|Mexico City Stadium||
+93|2026-07-06|Round of 16||Winner match 83|Winner match 84|Dallas Stadium||
+94|2026-07-06|Round of 16||Winner match 81|Winner match 82|Seattle Stadium||
+95|2026-07-07|Round of 16||Winner match 86|Winner match 88|Atlanta Stadium||
+96|2026-07-07|Round of 16||Winner match 85|Winner match 87|BC Place Vancouver||
+97|2026-07-09|Quarter-final||Winner match 89|Winner match 90|Boston Stadium||
+98|2026-07-10|Quarter-final||Winner match 93|Winner match 94|Los Angeles Stadium||
+99|2026-07-11|Quarter-final||Winner match 91|Winner match 92|Miami Stadium||
+100|2026-07-11|Quarter-final||Winner match 95|Winner match 96|Kansas City Stadium||
+101|2026-07-14|Semi-final||Winner match 97|Winner match 98|Dallas Stadium||
+102|2026-07-15|Semi-final||Winner match 99|Winner match 100|Atlanta Stadium||
+103|2026-07-18|Bronze Final||Runner-up match 101|Runner-up match 102|Miami Stadium||
+104|2026-07-19|Final||Winner match 101|Winner match 102|New York New Jersey Stadium||
 `.trim();
 
 function seedMatches(): Match[] {
   return FIXTURES_TEXT.split("\n").map((line) => {
     const [id, date, stage, group, home, away, venue, homeScore, awayScore] = line.split("|");
+
     return {
       id: Number(id),
       date,
@@ -123,7 +221,7 @@ function mergeResults(baseMatches: Match[], resultRows: ResultRow[]): Match[] {
   const map = new Map(resultRows.map((r) => [r.match_id, r]));
   return baseMatches.map((m) => {
     const found = map.get(m.id);
-    return found ? { ...m, homeScore: found.home_score, awayScore: found.away_score } : { ...m };
+    return found ? { ...m, homeScore: found.home_score, awayScore: found.away_score } : m;
   });
 }
 
@@ -160,19 +258,10 @@ function getLeagueCode(name: string) {
 function getPoints(pred: Prediction | undefined, match: Match, scoring: Scoring) {
   if (!pred || pred.home == null || pred.away == null) return 0;
   if (match.homeScore == null || match.awayScore == null) return 0;
-
-  if (pred.home === match.homeScore && pred.away === match.awayScore) {
-    return scoring.exactPoints;
-  }
-
+  if (pred.home === match.homeScore && pred.away === match.awayScore) return scoring.exactPoints;
   if (outcome(pred.home, pred.away) === outcome(match.homeScore, match.awayScore)) {
-    return scoring.outcomePoints + (
-      isDraw(pred.home, pred.away) && isDraw(match.homeScore, match.awayScore)
-        ? scoring.drawBonus
-        : 0
-    );
+    return scoring.outcomePoints + (isDraw(pred.home, pred.away) && isDraw(match.homeScore, match.awayScore) ? scoring.drawBonus : 0);
   }
-
   return 0;
 }
 
@@ -233,9 +322,7 @@ function StatCard({
     <div className={`rounded-2xl border px-4 py-3 ${dark ? "border-white/15 bg-white/10 text-white" : "border-slate-200 bg-white"}`}>
       <div className={`text-xs ${dark ? "text-white/70" : "text-slate-500"}`}>{label}</div>
       <div className="text-xl font-bold">{value}</div>
-      {sub ? (
-        <div className={`text-xs mt-1 ${dark ? "text-white/70" : "text-slate-500"}`}>{sub}</div>
-      ) : null}
+      {sub ? <div className={`text-xs mt-1 ${dark ? "text-white/70" : "text-slate-500"}`}>{sub}</div> : null}
     </div>
   );
 }
@@ -270,31 +357,17 @@ function MatchCard({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap gap-2 mb-2 items-center">
-              <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
-                {match.stage}
-              </span>
-              {match.group ? (
-                <span className="rounded-full border px-3 py-1 text-xs font-semibold">
-                  Group {match.group}
-                </span>
-              ) : null}
+              <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">{match.stage}</span>
+              {match.group ? <span className="rounded-full border px-3 py-1 text-xs font-semibold">Group {match.group}</span> : null}
               <span className="rounded-full border px-3 py-1 text-xs">Match {match.id}</span>
-              {locked ? (
-                <span className="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">
-                  Locked
-                </span>
-              ) : null}
+              {locked ? <span className="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">Locked</span> : null}
             </div>
-            <div className={`text-sm ${t.sub}`}>
-              {formatDate(match.date)} • {match.venue}
-            </div>
+            <div className={`text-sm ${t.sub}`}>{formatDate(match.date)} • {match.venue}</div>
           </div>
 
           <div className="text-right">
             <div className={`text-xs ${t.sub}`}>{selectedPlayer}'s prediction</div>
-            <div className="text-base font-semibold">
-              {prediction?.home ?? "–"} : {prediction?.away ?? "–"}
-            </div>
+            <div className="text-base font-semibold">{prediction?.home ?? "–"} : {prediction?.away ?? "–"}</div>
             {completed ? <div className="mt-1 text-xs font-medium text-emerald-600">+{pts} pts</div> : null}
           </div>
         </div>
@@ -310,9 +383,7 @@ function MatchCard({
 
           <div className="text-center">
             <div className={`text-xs uppercase tracking-wide ${t.sub}`}>Official result</div>
-            <div className="text-2xl font-bold">
-              {match.homeScore ?? "–"} : {match.awayScore ?? "–"}
-            </div>
+            <div className="text-2xl font-bold">{match.homeScore ?? "–"} : {match.awayScore ?? "–"}</div>
           </div>
 
           <div className={`rounded-2xl p-4 text-right ${t.soft}`}>
@@ -427,7 +498,6 @@ function BracketCard({ match, theme }: { match: Match; theme: Theme }) {
 
 export default function WorldCupPredictionChallenge() {
   const baseMatches = useMemo(() => seedMatches(), []);
-
   const [authUser, setAuthUser] = useState<any>(null);
   const [displayName, setDisplayName] = useState("");
 
@@ -447,9 +517,11 @@ export default function WorldCupPredictionChallenge() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [jsonText, setJsonText] = useState("");
+  const [connectedRealtime, setConnectedRealtime] = useState(false);
 
   const knockoutStages = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Bronze Final", "Final"];
   const stageOrder = ["Group Stage", ...knockoutStages];
+  const channelRef = useRef<any>(null);
   const t = themeClasses(theme);
 
   useEffect(() => {
@@ -488,6 +560,40 @@ export default function WorldCupPredictionChallenge() {
     void loadUserAndMaybeLeague();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!league?.id) return;
+
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    const channel = supabase
+      .channel(`league-${league.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "league_players", filter: `league_id=eq.${league.id}` }, () => {
+        void refreshLeagueData(league.id);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "league_predictions", filter: `league_id=eq.${league.id}` }, () => {
+        void refreshLeagueData(league.id);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "league_results", filter: `league_id=eq.${league.id}` }, () => {
+        void refreshLeagueData(league.id);
+      })
+      .subscribe((state) => {
+        setConnectedRealtime(state === "SUBSCRIBED");
+      });
+
+    channelRef.current = channel;
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      setConnectedRealtime(false);
+    };
+  }, [league?.id]);
 
   async function refreshLeagueData(leagueId: string) {
     const [playersRes, predsRes, resultsRes] = await Promise.all([
@@ -535,13 +641,17 @@ export default function WorldCupPredictionChallenge() {
   }
 
   async function createLeague() {
-    if (!authUser) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
       setStatus("You must be logged in to create a league.");
       return;
     }
 
+    const ownerDisplayName = displayName || user.email?.split("@")[0] || "Player";
     const leagueNameClean = leagueName.trim() || "Friends World Cup League";
-    const ownerDisplayName = displayName || authUser.email?.split("@")[0] || "Player";
 
     setLoading(true);
     setStatus("Creating league...");
@@ -564,7 +674,7 @@ export default function WorldCupPredictionChallenge() {
 
     const playerInsert = await supabase.from("league_players").insert({
       league_id: createdLeague.id,
-      user_id: authUser.id,
+      user_id: user.id,
       name: ownerDisplayName,
     });
 
@@ -655,22 +765,22 @@ export default function WorldCupPredictionChallenge() {
   }
 
   async function upsertPrediction(matchId: number, side: "home" | "away", rawValue: string) {
-    if (!authUser || !league) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || !league) {
       setStatus("You must be logged in and inside a league.");
       return;
     }
 
     const match = matches.find((m) => m.id === matchId);
     if (!match) return;
-
     if (isLocked(match, adminMode) && !adminMode) return;
 
     const current = predictions[selectedPlayer]?.[matchId] || { home: null, away: null };
     const nextValue = rawValue === "" ? null : Math.max(0, Number(rawValue));
-    const nextPred = {
-      ...current,
-      [side]: nextValue,
-    };
+    const nextPred = { ...current, [side]: nextValue };
 
     setPredictions((prev) => ({
       ...prev,
@@ -683,7 +793,7 @@ export default function WorldCupPredictionChallenge() {
     const { error } = await supabase.from("league_predictions").upsert(
       {
         league_id: league.id,
-        user_id: authUser.id,
+        user_id: user.id,
         player_name: selectedPlayer,
         match_id: matchId,
         home_score: nextPred.home,
@@ -779,16 +889,10 @@ export default function WorldCupPredictionChallenge() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            <a
-              href="/login"
-              className="rounded-2xl bg-blue-600 px-4 py-3 text-center font-semibold text-white"
-            >
+            <a href="/login" className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-center hover:bg-slate-800">
               Log in
             </a>
-            <a
-              href="/sign-up"
-              className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-center font-semibold text-white"
-            >
+            <a href="/sign-up" className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-center hover:bg-slate-800">
               Sign up
             </a>
           </div>
@@ -812,7 +916,9 @@ export default function WorldCupPredictionChallenge() {
               <div className="flex flex-wrap gap-2">
                 {league ? <span className="rounded-full bg-white/15 px-3 py-1 text-sm">League {league.code}</span> : null}
                 <span className="rounded-full bg-white/15 px-3 py-1 text-sm">{players.length || 1} players</span>
-                <span className="rounded-full bg-white/15 px-3 py-1 text-sm">Logged in as {displayName}</span>
+                <span className={`rounded-full px-3 py-1 text-sm ${connectedRealtime ? "bg-emerald-500/25" : "bg-amber-500/25"}`}>
+                  {connectedRealtime ? "Realtime connected" : "Realtime reconnecting"}
+                </span>
               </div>
 
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
@@ -820,7 +926,7 @@ export default function WorldCupPredictionChallenge() {
               </h1>
 
               <p className="max-w-3xl text-white/85 text-base md:text-lg">
-                Create a shared league, invite your friends, and follow predictions through the final.
+                Logged in as <span className="font-semibold">{displayName}</span>. Create or join a league and compete from the group stage through the final.
               </p>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -846,7 +952,7 @@ export default function WorldCupPredictionChallenge() {
                   <button
                     disabled={loading}
                     onClick={() => void createLeague()}
-                    className="w-full rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-900"
+                    className="w-full rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-50"
                   >
                     {loading ? "Working..." : "Create league"}
                   </button>
@@ -861,7 +967,7 @@ export default function WorldCupPredictionChallenge() {
                   <button
                     disabled={loading}
                     onClick={() => void joinLeague()}
-                    className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white"
+                    className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                   >
                     {loading ? "Working..." : "Join league"}
                   </button>
@@ -870,7 +976,7 @@ export default function WorldCupPredictionChallenge() {
                 <div className="space-y-3">
                   <div className="rounded-[28px] border border-white/15 bg-white/10 p-5 backdrop-blur">
                     <div className="mb-2 text-lg font-semibold">League controls</div>
-                    <div className="text-sm text-white/80">Pick your active view, share the code, or toggle admin mode.</div>
+                    <div className="text-sm text-white/80">Choose an active player view, share the code, or toggle admin mode for result entry.</div>
 
                     <div className="mt-4 space-y-3">
                       <select
@@ -916,18 +1022,9 @@ export default function WorldCupPredictionChallenge() {
                   <div className="rounded-[28px] border border-white/15 bg-white/10 p-5 backdrop-blur">
                     <div className="mb-2 text-lg font-semibold">Scoring</div>
                     <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="rounded-2xl bg-black/10 p-3">
-                        Exact
-                        <div className="mt-1 text-xl font-bold">{scoring.exactPoints}</div>
-                      </div>
-                      <div className="rounded-2xl bg-black/10 p-3">
-                        Outcome
-                        <div className="mt-1 text-xl font-bold">{scoring.outcomePoints}</div>
-                      </div>
-                      <div className="rounded-2xl bg-black/10 p-3">
-                        Draw bonus
-                        <div className="mt-1 text-xl font-bold">+{scoring.drawBonus}</div>
-                      </div>
+                      <div className="rounded-2xl bg-black/10 p-3">Exact<div className="mt-1 text-xl font-bold">{scoring.exactPoints}</div></div>
+                      <div className="rounded-2xl bg-black/10 p-3">Outcome<div className="mt-1 text-xl font-bold">{scoring.outcomePoints}</div></div>
+                      <div className="rounded-2xl bg-black/10 p-3">Draw bonus<div className="mt-1 text-xl font-bold">+{scoring.drawBonus}</div></div>
                     </div>
                   </div>
                 </div>
@@ -1055,7 +1152,7 @@ export default function WorldCupPredictionChallenge() {
 
                 <div className={`rounded-3xl border shadow-sm ${t.card}`}>
                   <div className="p-5 border-b">
-                    <div className="text-xl font-bold">Tournament summary</div>
+                    <div className="text-xl font-bold">League summary</div>
                   </div>
 
                   <div className="p-5 space-y-4">
@@ -1063,7 +1160,7 @@ export default function WorldCupPredictionChallenge() {
                     <StatCard label="Logged in" value={displayName || authUser.email || "—"} />
                     <StatCard label="Players" value={players.length} />
                     <div className={`rounded-2xl p-4 text-sm ${t.soft}`}>
-                      <p><strong>Tip:</strong> Admin mode lets you enter official results.</p>
+                      <p><strong>Tip:</strong> Admin mode lets you enter official results from this browser.</p>
                     </div>
                   </div>
                 </div>
@@ -1102,7 +1199,7 @@ export default function WorldCupPredictionChallenge() {
               <div className={`rounded-3xl border shadow-sm ${t.card}`}>
                 <div className="p-5 border-b">
                   <div className="text-xl font-bold">League details</div>
-                  <div className={`text-sm ${t.sub}`}>Your authenticated account is the player identity.</div>
+                  <div className={`text-sm ${t.sub}`}>Your authenticated account is your player identity.</div>
                 </div>
 
                 <div className="p-5 space-y-4">
@@ -1170,3 +1267,11 @@ export default function WorldCupPredictionChallenge() {
     </div>
   );
 }
+import { supabase } from "../lib/supabase/client";
+import { getDisplayName } from "../lib/player";
+
+type Match = {
+  id: number;
+  date: string;
+  stage: string;
+  group: string | null;
