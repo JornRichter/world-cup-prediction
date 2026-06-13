@@ -1276,11 +1276,4 @@ export default function WorldCupPredictionChallenge() {
     </div>
   );
 }
-import { supabase } from "../lib/supabase/client";
-import { getDisplayName } from "../lib/player";
 
-type Match = {
-  id: number;
-  date: string;
-  stage: string;
-  group: string | null;
